@@ -15,7 +15,8 @@
     "build": ":",
     "test": "yoshi test",
     "release": "yoshi release",
-    "prepush": "yoshi lint"
+    "prepush": "yoshi lint",
+    "postrelease": "echo \"##teamcity[buildStatus text='Version: `jq -r '.version' package.json`; {build.status.text}']\""
   },
   "dependencies": {
     "firebase": "^4.2.0"
@@ -30,6 +31,6 @@
     "yoshi": "latest"
   },
   "publishConfig": {
-    "registry": "http://repo.dev.wix/artifactory/api/npm/npm-local/"
+    "registry": "http://registry.npmjs.org"
   }
 }
