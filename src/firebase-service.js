@@ -64,9 +64,9 @@ module.exports = {
   getValuesAtPath: ({path}) => db.ref(path)
     .once('value')
     .then(snapshot => snapshot.val()),
-  // listenOnRef: (ref, options) => {
-  //   return listenOnRefWithQuery(ref, options);
-  // },
+  listenOnRef: (ref, options) => {
+    return listenOnRefWithQuery(ref, options);
+  },
   listenOnPath: (path, options) => {
     if (!db) {
       throw 'You must connect before trying to listen to firebase paths';

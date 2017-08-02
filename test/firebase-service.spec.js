@@ -39,6 +39,41 @@ describe('firebase service', () => {
 
   });
 
+  it('should support listening on a ref', async () => {
+    const path = 'whatever';
+    const event = 'event';
+    const value = 'a-firebase-value';
+    const key = 'a-firebase-key';
+    const callback = sinon.spy();
+
+    const listenOnRef = ref => {
+      firebaseService.listenOnRef(ref)
+        .when(event)
+        .call(callback);
+    };
+
+    const getRefFromListenOnPath = () => {
+      firebaseService.listenOnPath(path)
+        .when(event)
+        .call(({ref}) => listenOnRef(ref));
+    };
+
+    await firebaseService
+      .connect()
+      .then(getRefFromListenOnPath);
+
+    //the first call hits the listenOnPath callback, which sets up the listenOnRef listener
+    //the second hits the listenOnRef callback
+    await firebase.fireMockEvent(path, event, firebase.createMockFirebaseSnapshot(value, key, path));
+    await firebase.fireMockEvent(path, event, firebase.createMockFirebaseSnapshot(value, key, path));
+    expect(callback).to.have.been.called.once;
+    expect(callback).to.have.been.calledWithMatch({
+      key,
+      value
+    });
+
+  });
+
   it('should fail if attempting to listen to a path without connecting first', async () => {
     const fn = () => firebaseService.listenOnPath('path')
       .when('event')
