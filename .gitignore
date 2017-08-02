@@ -57,3 +57,10 @@ typings/
 # dotenv environment variables file
 .env
 
+dist
+node_modules
+*npm-debug.log
+target
+maven
+package-lock.json
+.idea/

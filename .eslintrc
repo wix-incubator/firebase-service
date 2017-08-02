@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "wix/esnext"
+  ],
+  "rules": {
+    "no-use-before-define": 0,
+    "no-case-declarations": 0,
+    "new-cap": 0,
+    "lodash/import-scope": 0
+  }
+}
