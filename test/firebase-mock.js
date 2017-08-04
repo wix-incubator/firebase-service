@@ -71,9 +71,9 @@ function firebaseMock() {
   });
 
   const returnValue = {
-    initializeApp() {
+    initializeApp: sinon.stub().callsFake(function () {
       return this;
-    },
+    }),
     auth: sinon.stub().callsFake(function () {
       return this;
     }),

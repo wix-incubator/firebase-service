@@ -15,6 +15,58 @@ describe('firebase service', () => {
   });
 
 
+  it('should be able to connect to firebase', async () => {
+    const options = {
+      prop: 'val'
+    };
+    const authKey = 'authKey';
+    await firebaseService
+      .connect(options, authKey);
+
+    expect(firebase.initializeApp).to.have.been.calledWith(options);
+    expect(firebase.signInWithCustomToken).to.have.been.calledWith(authKey);
+
+  });
+
+  it('should allow multiple consumers simultaneously', async () => {
+    const callback1 = sinon.spy();
+    const callback2 = sinon.spy();
+    const path1 = 'path1';
+    const event1 = 'event1';
+    const path2 = 'path2';
+    const event2 = 'event2';
+
+    const service1 = new firebaseService();
+    const service2 = new firebaseService();
+
+    await service1
+      .connect()
+      .then(() => {
+        service1.listenOnPath(path1)
+          .when(event1)
+          .call(callback1);
+      });
+
+    await service2
+      .connect()
+      .then(() => {
+        service2.listenOnPath(path2)
+          .when(event2)
+          .call(callback2);
+      });
+
+    await firebase.fireMockEvent(path1, event1, firebase.createMockFirebaseSnapshot());
+    expect(callback1).to.have.been.called.once;
+
+    //this is important - even though we disconnect from one of the services, the other is still alive
+    //because they are independent of one another
+    service1.disconnect();
+
+    await firebase.fireMockEvent(path2, event2, firebase.createMockFirebaseSnapshot());
+    expect(callback2).to.have.been.called.once;
+
+  });
+
   it('should be able to connect and listen on a path', async () => {
     const callback = sinon.spy();
     const path = 'whatever';
