@@ -8,11 +8,12 @@
     "url": ""
   },
   "main": "src/firebase-service.js",
+  "module": "dist/src/firebase-service.js",
   "scripts": {
     "start": "yoshi start",
     "pretest": "yoshi lint && yoshi build",
     "lint": "yoshi lint",
-    "build": ":",
+    "build": "rm -fr ./dist && node_modules/.bin/babel . --ignore=node_modules --presets=es2015,stage-0 --out-dir dist",
     "test": "yoshi test",
     "release": "yoshi release",
     "prepush": "yoshi lint",
@@ -22,7 +23,10 @@
     "firebase": "^4.2.0"
   },
   "devDependencies": {
+    "babel-cli": "^6.26.0",
     "babel-polyfill": "^6.23.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
     "chai": "^3.5.0",
     "husky": "^0.13.4",
     "proxyquire": "^1.8.0",
