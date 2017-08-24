@@ -13,7 +13,7 @@
     "start": "yoshi start",
     "pretest": "yoshi lint && yoshi build",
     "lint": "yoshi lint",
-    "build": "rm -fr ./dist && node_modules/.bin/babel . --ignore=node_modules  --presets=es2015,stage-0 --out-dir dist -q",
+    "build": "rm -fr ./dist && node_modules/.bin/babel . --ignore=node_modules --presets=es2015,stage-0 --out-dir dist -q",
     "test": "yoshi test",
     "release": "yoshi release",
     "prepush": "yoshi lint",
