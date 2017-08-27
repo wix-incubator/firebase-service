@@ -3,7 +3,7 @@ const chai = require('chai');
 const sinonChai = require('sinon-chai');
 chai.use(sinonChai);
 
-function firebaseMock() {
+function firebaseMock({TIMESTAMP_PATH = '/timestamp'} = {}) {
 
   const firebaseRefOffSpy = sinon.stub().callsFake(path => {
     _callbacks[path] = {
@@ -50,19 +50,21 @@ function firebaseMock() {
       return this;
     },
     once: arg => {
-      if (path === '/timestamp' && arg === 'value') {
+      if (path === TIMESTAMP_PATH && arg === 'value') {
         return Promise.resolve(createMockFirebaseSnapshot(_serverTime));
       }
       return Promise.resolve(createMockFirebaseSnapshot(getDataAtPath(path)));
     },
     set: value => {
-      if (path === '/timestamp') {
+      if (path === TIMESTAMP_PATH) {
         return Promise.resolve().then(() => _serverTime = value);
       } else {
         setDataAtPath(path, value);
       }
     }
   });
+
+
 
   const createMockFirebaseSnapshot = (valResult, keyResult, refPath) => ({
     val: () => valResult,
