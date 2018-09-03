@@ -14,7 +14,6 @@ describe('firebase service', () => {
     });
   });
 
-
   it('should be able to connect to firebase', async () => {
     const options = {
       prop: 'val'
@@ -127,18 +126,18 @@ describe('firebase service', () => {
   });
 
   it('should fail if attempting to listen to a path without connecting first', async () => {
-    const fn = () => firebaseService.listenOnPath('path')
+    const fn = () => firebaseService.listenOnPath('some/firebase-path')
       .when('event')
       .call(() => {});
-    expect(fn).to.throw('You must connect before trying to listen to firebase paths');
+    expect(fn).to.throw('You must connect before trying to listen to firebase paths (path=firebase-path)');
   });
 
   it('should fail if attempting to listen to a path without waiting for successful connection', async () => {
     firebaseService.connect();
-    const fn = () => firebaseService.listenOnPath('path')
+    const fn = () => firebaseService.listenOnPath('some/firebase/111-222-333/path-mock')
       .when('event')
       .call(() => {});
-    expect(fn).to.throw('You must connect before trying to listen to firebase paths');
+    expect(fn).to.throw('You must connect before trying to listen to firebase paths (path=path-mock)');
   });
 
   it('should wrap all callbacks in try/catch', async () => {

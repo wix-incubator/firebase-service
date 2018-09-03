@@ -29,10 +29,9 @@ function setupService() {
             } catch (e) {
               console.error(e);
             }
-
           });
-          listeningOnRefs.push(ref);
 
+          listeningOnRefs.push(ref);
         }
       })
     };
@@ -70,8 +69,11 @@ function setupService() {
     },
     listenOnPath: (path, options) => {
       if (!db) {
-        throw 'You must connect before trying to listen to firebase paths';
+        const pathNames = (path || '').split('/');
+        const pathName = pathNames[pathNames.length - 1];
+        throw new Error(`You must connect before trying to listen to firebase paths (path=${pathName})`);
       }
+
       const ref = db.ref(path);
       return listenOnRefWithQuery(ref, options);
     },
@@ -79,7 +81,6 @@ function setupService() {
 }
 
 class FirebaseService {
-
   constructor() {
     const service = setupService();
     Object.assign(this, service);
