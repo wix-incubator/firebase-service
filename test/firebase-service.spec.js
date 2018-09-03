@@ -122,7 +122,6 @@ describe('firebase service', () => {
       key,
       value
     });
-
   });
 
   it('should fail if attempting to listen to a path without connecting first', async () => {
@@ -200,6 +199,17 @@ describe('firebase service', () => {
     expect(serverTime).to.equal(now);
   });
 
+  it('should throw an error for getting the server time if not connected', async () => {
+    const now = new Date();
+    firebase.mockServerTime(now);
+
+    await firebaseService.connect();
+    await firebaseService.disconnect();
+
+    const errFn = () => firebaseService.getFirebaseServerTime('/path/timestamp-mock');
+    expect(errFn).to.throw('You must connect before getting server time (path=timestamp-mock)');
+  });
+
   it('should get values at a path', async () => {
     await firebaseService.connect();
     const data = {
@@ -209,6 +219,20 @@ describe('firebase service', () => {
     firebase.setDataAtPath(path, data);
     const values = await firebaseService.getValuesAtPath({path});
     expect(values).to.equal(data);
+  });
+
+  it('should throw an error for getting values if not connected', async () => {
+    const data = {
+      prop: 'value'
+    };
+    const path = '/some-path-with-values';
+    firebase.setDataAtPath(path, data);
+
+    await firebaseService.connect();
+    await firebaseService.disconnect();
+
+    const errFn = () => firebaseService.getValuesAtPath({path});
+    expect(errFn).to.throw('You must connect before getting values at path (path=some-path-with-values)');
   });
 
   it('should support options when listening on a path', async () => {
@@ -230,6 +254,26 @@ describe('firebase service', () => {
     expect(fn).to.have.been.calledTwice;
   });
 
+  it('should stay disconnected if disconnected abruptly amidst connection establishment', async () => {
+    let resolveProxy = null;
+    firebase.initializeApp = sinon.stub().returns(new Promise(resolve => {
+      resolveProxy = resolve;
+    }));
+
+    const connectPromise = firebaseService.connect();
+    firebaseService.disconnect();
+    resolveProxy(firebase); // unblock initializeApp so connect() could complete
+    await connectPromise; // wait for connect() to complete
+
+    expect(firebaseService.isConnected()).to.equal(false);
+  });
+
+  it('should allow for reconnecting', async () => {
+    await firebaseService.connect();
+    await firebaseService.disconnect();
+    await firebaseService.connect();
+    expect(firebaseService.isConnected()).to.equal(true);
+  });
 });
 
 const stubConsoleError = () => {

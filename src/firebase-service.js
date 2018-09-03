@@ -1,8 +1,14 @@
 const firebase = require('firebase');
 const uuid = require('uuid');
 
+function getPathNameHint(path) {
+  const pathNames = (path || '').split('/');
+  return pathNames[pathNames.length - 1];
+}
+
 function setupService() {
   const listeningOnRefs = [];
+  let userDisconnected = false;
   let db = null;
 
   const listenOnRefWithQuery = (ref, {orderBy, startAt} = {}) => {
@@ -38,21 +44,32 @@ function setupService() {
   };
 
   return {
-    connect: (options, authKey) => Promise
-      .resolve()
-      .then(() => firebase.initializeApp(options, uuid()))
-      .then(app => app.auth()
-        .signInWithCustomToken(authKey)
-        .then(() => {
-          db = app.database();
-        })),
+    connect: (options, authKey) => {
+      userDisconnected = false;
+      return Promise
+        .resolve()
+        .then(() => firebase.initializeApp(options, uuid()))
+        .then(app => app
+          .auth()
+          .signInWithCustomToken(authKey)
+          .then(() => {
+            if (!userDisconnected) {
+              db = app.database();
+            }
+          }));
+    },
     disconnect: () => {
       listeningOnRefs.forEach(r => r.off());
       listeningOnRefs.length = 0;
       db = null;
+      userDisconnected = true;
     },
     isConnected: () => !!db,
     getFirebaseServerTime: serverTimePath => {
+      if (!db) {
+        throw new Error(`You must connect before getting server time (path=${getPathNameHint(serverTimePath)})`);
+      }
+
       const ref = db.ref(serverTimePath);
       return ref
         .set(firebase.database.ServerValue.TIMESTAMP)
@@ -61,17 +78,22 @@ function setupService() {
           .then(snapshot => snapshot.val())
         );
     },
-    getValuesAtPath: ({path}) => db.ref(path)
-      .once('value')
-      .then(snapshot => snapshot.val()),
+    getValuesAtPath: ({path}) => {
+      if (!db) {
+        throw new Error(`You must connect before getting values at path (path=${getPathNameHint(path)})`);
+      }
+
+      return db
+        .ref(path)
+        .once('value')
+        .then(snapshot => snapshot.val());
+    },
     listenOnRef: (ref, options) => {
       return listenOnRefWithQuery(ref, options);
     },
     listenOnPath: (path, options) => {
       if (!db) {
-        const pathNames = (path || '').split('/');
-        const pathName = pathNames[pathNames.length - 1];
-        throw new Error(`You must connect before trying to listen to firebase paths (path=${pathName})`);
+        throw new Error(`You must connect before trying to listen to firebase paths (path=${getPathNameHint(path)})`);
       }
 
       const ref = db.ref(path);
