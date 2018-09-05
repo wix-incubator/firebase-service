@@ -16,7 +16,7 @@
     "build": ":",
     "test": "yoshi test",
     "prerelease": "rm -fr dist && node_modules/.bin/babel . --ignore=node_modules --presets=es2015,stage-0 --out-dir dist",
-    "release": "yoshi release",
+    "release": "rnx release",
     "prepush": "yoshi lint",
     "postrelease": "echo \"##teamcity[buildStatus text='Version: `jq -r '.version' package.json`; {build.status.text}']\""
   },
@@ -34,7 +34,8 @@
     "proxyquire": "^1.8.0",
     "sinon": "^2.4.1",
     "sinon-chai": "^2.12.0",
-    "yoshi": "latest"
+    "yoshi": "latest",
+    "react-native-extended-cli": "^1.0.209"
   },
   "publishConfig": {
     "registry": "http://registry.npmjs.org"
