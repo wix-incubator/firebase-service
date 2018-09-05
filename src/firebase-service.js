@@ -9,6 +9,7 @@ function getPathNameHint(path) {
 function setupService() {
   const listeningOnRefs = [];
   let userDisconnected = false;
+  let _app = null;
   let db = null;
 
   const listenOnRefWithQuery = (ref, {orderBy, startAt} = {}) => {
@@ -48,7 +49,14 @@ function setupService() {
       userDisconnected = false;
       return Promise
         .resolve()
-        .then(() => firebase.initializeApp(options, uuid()))
+        .then(() => {
+          if (!_app) {
+            const appId = uuid();
+            console.log('FirebaseService', 'initializing a new app, id is', appId);
+            _app = firebase.initializeApp(options, appId);
+          }
+          return _app;
+        })
         .then(app => app
           .auth()
           .signInWithCustomToken(authKey)
@@ -61,6 +69,11 @@ function setupService() {
     disconnect: () => {
       listeningOnRefs.forEach(r => r.off());
       listeningOnRefs.length = 0;
+      if (_app) {
+        console.log('FirebaseService', 'deleting app', _app.name);
+        _app.delete();
+        _app = null;
+      }
       db = null;
       userDisconnected = true;
     },
