@@ -9,24 +9,19 @@ class FirebaseService {
   }
 
   connect(options, authKey) {
-    let connectPromise;
-
     if (this.db) {
-      connectPromise = Promise
-        .resolve()
-        .then(this.db.goOnline());
-    } else {
-      connectPromise = Promise
-        .resolve()
-        .then(() => firebase.initializeApp(options, this.name))
-        .then(app => app
-          .auth()
-          .signInWithCustomToken(authKey)
-          .then(() => {
-            this.db = app.database();
-          }));
+      return this.db.goOnline();
     }
-    return connectPromise;
+
+    return Promise
+      .resolve()
+      .then(() => firebase.initializeApp(options, this.name))
+      .then(app => app
+        .auth()
+        .signInWithCustomToken(authKey)
+        .then(() => {
+          this.db = app.database();
+        }));
   }
 
   disconnect() {
@@ -63,7 +58,7 @@ class FirebaseService {
   }
 
   listenOnRef(ref, options) {
-    return this._listenOnRefWithQuery(ref, options);
+    return this.listenOnRefWithQuery(ref, options);
   }
 
   listenOnPath(path, options) {
@@ -72,10 +67,10 @@ class FirebaseService {
     }
 
     const ref = this.db.ref(path);
-    return this._listenOnRefWithQuery(ref, options);
+    return this.listenOnRefWithQuery(ref, options);
   }
 
-  _listenOnRefWithQuery(ref, {orderBy, startAt} = {}) {
+  listenOnRefWithQuery(ref, {orderBy, startAt} = {}) {
     if (orderBy) {
       ref = ref.orderByChild(orderBy);
     }
