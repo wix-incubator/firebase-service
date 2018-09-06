@@ -115,6 +115,4 @@ function getPathNameHint(path) {
   return pathNames[pathNames.length - 1];
 }
 
-module.exports = {
-  FirebaseService
-};
+module.exports = FirebaseService;

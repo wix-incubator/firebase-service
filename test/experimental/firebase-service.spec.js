@@ -14,7 +14,7 @@ describe('NEW firebase service', () => {
     const mocks = {
       firebase
     };
-    FirebaseService = require('proxyquire').noCallThru()('../../src/experimental/firebase-service', mocks).FirebaseService;
+    FirebaseService = require('proxyquire').noCallThru()('../../src/experimental/firebase-service', mocks);
     firebaseService = new FirebaseService();
   });
 
