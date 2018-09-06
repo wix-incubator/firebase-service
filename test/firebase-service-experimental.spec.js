@@ -91,17 +91,20 @@ describe('NEW firebase service', () => {
     });
   });
 
-  it('should not initialize app more than once (should go-online, instead)', async () => {
-    firebase.spies.databaseSpy.goOnline.returns(Promise.resolve('some-mock-value'));
-
-    await firebaseService.connect();
-    expect(firebase.spies.databaseSpy.goOnline).not.to.have.been.called;
-
-    const connected = await firebaseService.connect();
-    expect(firebase.spies.databaseSpy.goOnline).to.have.been.calledOnce;
-    expect(connected).to.equal('some-mock-value');
-
-    expect(firebase.initializeApp).to.have.been.calledOnce;
+  it('should not initialize app more than once (should go-online, instead)', done => {
+    firebaseService.connect()
+      .then(() => {
+        expect(firebase.spies.databaseSpy.goOnline).not.to.have.been.called;
+      })
+      .then(() => firebaseService.connect()
+        .then(() => { // Note: this can only pass if connect() also returns as promise the 2nd time
+          expect(firebase.spies.databaseSpy.goOnline).to.have.been.calledOnce;
+          expect(firebase.initializeApp).to.have.been.calledOnce;
+          done();
+        }))
+      .catch(err => {
+        done(err);
+      });
   });
 
   it('should support listening on a ref', async () => {
