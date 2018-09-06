@@ -7,8 +7,8 @@
     "email": "aarong@wix.com",
     "url": ""
   },
-  "main": "dist/src/index.js",
-  "module": "dist/src/index.js",
+  "main": "dist/src/firebase-service.js",
+  "module": "dist/src/firebase-service.js",
   "scripts": {
     "start": "yoshi start",
     "pretest": "yoshi lint && yoshi build",
