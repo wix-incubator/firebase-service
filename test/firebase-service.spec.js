@@ -274,6 +274,21 @@ describe('firebase service', () => {
     await firebaseService.connect();
     expect(firebaseService.isConnected()).to.equal(true);
   });
+
+  it('should support disconnecting via equivalent api - terminate()', async () => {
+    await firebaseService.connect();
+    const fn = sinon.spy();
+    firebaseService.listenOnPath('whatever')
+      .when('event')
+      .call(fn);
+    await firebase.fireMockEvent('whatever', 'event', firebase.createMockFirebaseSnapshot());
+    expect(fn).to.have.been.calledOnce;
+    firebaseService.terminate();
+    //this event should not call the callback again'
+    fn.reset();
+    await firebase.fireMockEvent('whatever', 'event', firebase.createMockFirebaseSnapshot());
+    expect(fn).not.to.have.been.called;
+  });
 });
 
 const stubConsoleError = () => {

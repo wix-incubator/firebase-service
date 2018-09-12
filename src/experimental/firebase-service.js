@@ -6,23 +6,27 @@ class FirebaseService {
     this.name = name;
     this.listeningOnRefs = [];
     this.db = null;
+    this.terminated = false;
   }
 
   connect(options, authKey) {
-    let connectPromise;
+    this._assertInstanceAlive();
 
+    let connectPromise;
     if (this.db) {
-      connectPromise = Promise
-        .resolve()
-        .then(this.db.goOnline());
+      connectPromise = Promise.resolve()
+        .then(() => {
+          this._assertInstanceAlive();
+          return this.db.goOnline();
+        });
     } else {
-      connectPromise = Promise
-        .resolve()
+      connectPromise = Promise.resolve()
         .then(() => firebase.initializeApp(options, this.name))
         .then(app => app
           .auth()
           .signInWithCustomToken(authKey)
           .then(() => {
+            this._assertInstanceAlive();
             this.db = app.database();
           }));
     }
@@ -37,9 +41,22 @@ class FirebaseService {
     }
   }
 
+  terminate() {
+    this.terminated = true;
+    this.disconnect();
+
+    if (this.db) {
+      try {
+        return this.db.app.delete();
+      } finally {
+        this.db = null;
+      }
+    }
+  }
+
   getFirebaseServerTime(serverTimePath) {
     if (!this.db) {
-      throw new Error(`You must connect before getting server time (path=${getPathNameHint(serverTimePath)})`);
+      throw new Error(`FirebaseService.getFirebaseServerTime: not connected! (path=${getPathNameHint(serverTimePath)})`);
     }
 
     const ref = this.db.ref(serverTimePath);
@@ -53,7 +70,7 @@ class FirebaseService {
 
   getValuesAtPath({path}) {
     if (!this.db) {
-      throw new Error(`You must connect before getting values at path (path=${getPathNameHint(path)})`);
+      throw new Error(`FirebaseService.getValuesAsPath: not connected! (path=${getPathNameHint(path)})`);
     }
 
     return this.db
@@ -68,7 +85,7 @@ class FirebaseService {
 
   listenOnPath(path, options) {
     if (!this.db) {
-      throw new Error(`You must connect before trying to listen to firebase paths (path=${getPathNameHint(path)})`);
+      throw new Error(`FirebaseService.listenOnPath: not connected! (path=${getPathNameHint(path)})`);
     }
 
     const ref = this.db.ref(path);
@@ -107,6 +124,12 @@ class FirebaseService {
         }
       })
     };
+  }
+
+  _assertInstanceAlive() {
+    if (this.terminated) {
+      throw new Error(`Can't connect a firebase service after termination, please use a different instance (name=${this.name})`);
+    }
   }
 }
 

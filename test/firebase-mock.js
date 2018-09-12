@@ -77,16 +77,18 @@ function firebaseMock({TIMESTAMP_PATH = '/timestamp'} = {}) {
     goOnline: sinon.stub(),
   };
 
-  const returnValue = {
+  const firebaseMock = {
     initializeApp: sinon.stub().callsFake(function () {
       return this;
     }),
+    delete: sinon.stub(),
     auth: sinon.stub().callsFake(function () {
       return this;
     }),
     signInWithCustomToken: sinon.stub().callsFake(() => Promise.resolve()),
     database: () => ({
       ref: path => createMockFirebaseRef(path),
+      app: firebaseMock,
       ...databaseSpy
     }),
     createMockFirebaseSnapshot,
@@ -109,12 +111,12 @@ function firebaseMock({TIMESTAMP_PATH = '/timestamp'} = {}) {
     mockServerTime: time => serverTimeMock.callsFake(() => time)
   };
 
-  returnValue.database.ServerValue = {
+  firebaseMock.database.ServerValue = {
     get TIMESTAMP() {
       return serverTimeMock();
     }
   };
-  return returnValue;
+  return firebaseMock;
 }
 
 module.exports = firebaseMock;

@@ -6,6 +6,26 @@ let firebase;
 let FirebaseService;
 let firebaseService;
 
+const callAndCatch = async fn => {
+  let error;
+  try {
+    await fn();
+  } catch (err) {
+    error = err;
+  }
+  return error;
+};
+
+const waitForPromiseAndCatch = async promise => {
+  let error;
+  try {
+    await promise;
+  } catch (err) {
+    error = err;
+  }
+  return error;
+};
+
 describe('NEW firebase service', () => {
 
   beforeEach(() => {
@@ -15,7 +35,7 @@ describe('NEW firebase service', () => {
       firebase
     };
     FirebaseService = require('proxyquire').noCallThru()('../../src/experimental/firebase-service', mocks);
-    firebaseService = new FirebaseService();
+    firebaseService = new FirebaseService('firebase-service-uut');
   });
 
   it('should be able to connect to firebase', async () => {
@@ -145,7 +165,7 @@ describe('NEW firebase service', () => {
     const fn = () => firebaseService.listenOnPath('some/firebase-path')
       .when('event')
       .call(() => {});
-    expect(fn).to.throw('You must connect before trying to listen to firebase paths (path=firebase-path)');
+    expect(fn).to.throw('FirebaseService.listenOnPath: not connected! (path=firebase-path)');
   });
 
   it('should fail if attempting to listen to a path without waiting for successful connection', async () => {
@@ -153,7 +173,7 @@ describe('NEW firebase service', () => {
     const fn = () => firebaseService.listenOnPath('some/firebase/111-222-333/path-mock')
       .when('event')
       .call(() => {});
-    expect(fn).to.throw('You must connect before trying to listen to firebase paths (path=path-mock)');
+    expect(fn).to.throw('FirebaseService.listenOnPath: not connected! (path=path-mock)');
   });
 
   it('should wrap all callbacks in try/catch', async () => {
@@ -189,13 +209,29 @@ describe('NEW firebase service', () => {
   it('should support disconnecting', async () => {
     await firebaseService.connect();
     const fn = sinon.spy();
-    firebaseService.listenOnPath('whatever')
-      .when('event')
-      .call(fn);
+
+    firebaseService.listenOnPath('whatever').when('event').call(fn);
+
     await firebase.fireMockEvent('whatever', 'event', firebase.createMockFirebaseSnapshot());
     expect(fn).to.have.been.calledOnce;
     firebaseService.disconnect();
+
     //this event should not call the callback again'
+    fn.reset();
+    await firebase.fireMockEvent('whatever', 'event', firebase.createMockFirebaseSnapshot());
+    expect(fn).not.to.have.been.called;
+  });
+
+  it('should disconnect upon termination', async () => {
+    await firebaseService.connect();
+    const fn = sinon.spy();
+
+    firebaseService.listenOnPath('whatever').when('event').call(fn);
+
+    await firebase.fireMockEvent('whatever', 'event', firebase.createMockFirebaseSnapshot());
+    expect(fn).to.have.been.calledOnce;
+    firebaseService.terminate();
+
     fn.reset();
     await firebase.fireMockEvent('whatever', 'event', firebase.createMockFirebaseSnapshot());
     expect(fn).not.to.have.been.called;
@@ -206,6 +242,75 @@ describe('NEW firebase service', () => {
     await firebaseService.disconnect();
 
     expect(firebase.spies.databaseSpy.goOffline).to.have.been.calledOnce;
+  });
+
+  it('should kill the firebase app upon termination', async () => {
+    firebase.delete.returns(Promise.resolve('mock-resolved-value'));
+
+    await firebaseService.connect();
+    const returnedValue = await firebaseService.terminate();
+
+    expect(firebase.delete).to.have.been.calledOnce;
+    expect(returnedValue).to.equal('mock-resolved-value');
+  });
+
+  it('should not kill the app if wasn\'t initialized', async () => {
+    const expectedError = new Error('init fail mock');
+    firebase.initializeApp = sinon.stub().returns(Promise.reject(expectedError));
+
+    const error = await callAndCatch(() => firebaseService.connect());
+    expect(error).to.equal(expectedError);
+
+    await firebaseService.terminate();
+    expect(firebase.delete).not.to.have.been.called;
+  });
+
+  it('should not reconnect after termination', async () => {
+    await firebaseService.connect();
+    await firebaseService.terminate();
+
+    const error = await callAndCatch(() => firebaseService.connect());
+
+    expect(error.message).to.equal('Can\'t connect a firebase service after termination, please use a different instance (name=firebase-service-uut)');
+    expect(firebase.initializeApp).to.have.been.calledOnce;
+  });
+
+  it('should not reconnect after termination, even if terminated while waiting for auth completion', async () => {
+    let resolveProxy = null;
+    firebase.signInWithCustomToken = sinon.stub().returns(new Promise(resolve => {
+      resolveProxy = resolve;
+    }));
+
+    const connectPromise = firebaseService.connect();
+    await firebaseService.terminate();
+    resolveProxy(firebase); // unblock signInWithCustomToken so connect() could complete
+
+    const error = await waitForPromiseAndCatch(connectPromise);
+    expect(error).not.to.be.undefined;
+  });
+
+  it('should not reconnect after termination, even if terminated while waiting connect() over already-connected (i.e. db.goOnline)', async () => {
+    await firebaseService.connect();
+
+    let resolveProxy = null;
+    firebase.spies.databaseSpy.goOnline = sinon.stub().returns(new Promise(resolve => {
+      resolveProxy = resolve;
+    }));
+    const connectPromise = firebaseService.connect();
+    await firebaseService.terminate();
+    resolveProxy(firebase); // unblock goOnline so connect() could complete
+
+    const error = await waitForPromiseAndCatch(connectPromise);
+    expect(error).not.to.be.undefined;
+  });
+
+
+  it('shouldnt delete a deleted app upon termination', async () => {
+    await firebaseService.connect();
+    await firebaseService.terminate();
+    await firebaseService.terminate();
+
+    expect(firebase.delete).to.have.been.calledOnce;
   });
 
   it('should support getting server time', async () => {
@@ -223,7 +328,7 @@ describe('NEW firebase service', () => {
     await firebaseService.disconnect();
 
     const errFn = () => firebaseService.getFirebaseServerTime('/path/timestamp-mock');
-    expect(errFn).to.throw('You must connect before getting server time (path=timestamp-mock)');
+    expect(errFn).to.throw('FirebaseService.getFirebaseServerTime: not connected! (path=timestamp-mock)');
   });
 
   it('should get values at a path', async () => {
@@ -247,7 +352,7 @@ describe('NEW firebase service', () => {
     await firebaseService.disconnect();
 
     const errFn = () => firebaseService.getValuesAtPath({path});
-    expect(errFn).to.throw('You must connect before getting values at path (path=some-path-with-values)');
+    expect(errFn).to.throw('FirebaseService.getValuesAsPath: not connected! (path=some-path-with-values)');
   });
 
   it('should be able to work offline', async () => {

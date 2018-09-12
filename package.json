@@ -15,6 +15,7 @@
     "lint": "yoshi lint",
     "build": ":",
     "test": "yoshi test",
+    "watch": "export WIX_NODE_BUILD_WATCH_MODE=true; npm run test",
     "prerelease": "rm -fr dist && node_modules/.bin/babel . --ignore=node_modules --presets=es2015,stage-0 --out-dir dist",
     "release": "rnx release",
     "prepush": "yoshi lint",

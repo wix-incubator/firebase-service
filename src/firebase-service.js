@@ -43,7 +43,7 @@ function setupService() {
     };
   };
 
-  return {
+  const service = {
     connect: (options, authKey) => {
       userDisconnected = false;
       return Promise
@@ -64,6 +64,7 @@ function setupService() {
       db = null;
       userDisconnected = true;
     },
+    terminate: () => service.disconnect(),
     isConnected: () => !!db,
     getFirebaseServerTime: serverTimePath => {
       if (!db) {
@@ -100,6 +101,7 @@ function setupService() {
       return listenOnRefWithQuery(ref, options);
     },
   };
+  return service;
 }
 
 class FirebaseService {
