@@ -16,8 +16,9 @@ class FirebaseService {
     if (this.db) {
       connectPromise = Promise.resolve()
         .then(() => {
-          this._assertInstanceAlive();
-          return this.db.goOnline();
+          if (this.db) {
+            return this.db.goOnline();
+          }
         });
     } else {
       connectPromise = Promise.resolve()
@@ -26,7 +27,9 @@ class FirebaseService {
           .auth()
           .signInWithCustomToken(authKey)
           .then(() => {
-            this._assertInstanceAlive();
+            if (this.terminated) {
+              return app.delete();
+            }
             this.db = app.database();
           }));
     }

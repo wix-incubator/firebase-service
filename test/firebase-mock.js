@@ -86,11 +86,11 @@ function firebaseMock({TIMESTAMP_PATH = '/timestamp'} = {}) {
       return this;
     }),
     signInWithCustomToken: sinon.stub().callsFake(() => Promise.resolve()),
-    database: () => ({
+    database: sinon.stub().callsFake(() => ({
       ref: path => createMockFirebaseRef(path),
       app: firebaseMock,
       ...databaseSpy
-    }),
+    })),
     createMockFirebaseSnapshot,
     fireMockEvent: (path, event, snapshot) => {
       if (_callbacks[path] && _callbacks[path][event]) {

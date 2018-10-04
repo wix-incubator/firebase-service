@@ -16,17 +16,7 @@ const callAndCatch = async fn => {
   return error;
 };
 
-const waitForPromiseAndCatch = async promise => {
-  let error;
-  try {
-    await promise;
-  } catch (err) {
-    error = err;
-  }
-  return error;
-};
-
-describe('NEW firebase service', () => {
+describe('NEW (experimental) firebase service', () => {
 
   beforeEach(() => {
     firebase = firebaseMock();
@@ -275,7 +265,7 @@ describe('NEW firebase service', () => {
     expect(firebase.initializeApp).to.have.been.calledOnce;
   });
 
-  it('should not reconnect after termination, even if terminated while waiting for auth completion', async () => {
+  it('should not complete connection after termination, even if terminated while waiting for auth completion', async () => {
     let resolveProxy = null;
     firebase.signInWithCustomToken = sinon.stub().returns(new Promise(resolve => {
       resolveProxy = resolve;
@@ -285,25 +275,32 @@ describe('NEW firebase service', () => {
     await firebaseService.terminate();
     resolveProxy(firebase); // unblock signInWithCustomToken so connect() could complete
 
-    const error = await waitForPromiseAndCatch(connectPromise);
-    expect(error).not.to.be.undefined;
+    await connectPromise;
+    expect(firebase.database).not.to.have.been.called;
+    expect(firebase.delete).to.have.been.calledOnce;
   });
 
-  it('should not reconnect after termination, even if terminated while waiting connect() over already-connected (i.e. db.goOnline)', async () => {
+  it('should not complete 2nd connection after termination even if was already connected beforehand', async () => {
     await firebaseService.connect();
 
-    let resolveProxy = null;
-    firebase.spies.databaseSpy.goOnline = sinon.stub().returns(new Promise(resolve => {
-      resolveProxy = resolve;
-    }));
     const connectPromise = firebaseService.connect();
     await firebaseService.terminate();
-    resolveProxy(firebase); // unblock goOnline so connect() could complete
+    await connectPromise;
 
-    const error = await waitForPromiseAndCatch(connectPromise);
-    expect(error).not.to.be.undefined;
+    expect(firebase.database).to.have.been.calledOnce;
+    expect(firebase.delete).to.have.been.calledOnce;
   });
 
+  it('should not complete 2nd connection after termination, even if was already connected beforehand and terminated WHILE inside db.goOnline()', async () => {
+    await firebaseService.connect();
+
+    firebase.spies.databaseSpy.goOnline.callsFake(() => new Promise(resolve => {
+      firebaseService.terminate();
+      resolve();
+    }));
+    await firebaseService.connect();
+
+  });
 
   it('shouldnt delete a deleted app upon termination', async () => {
     await firebaseService.connect();
