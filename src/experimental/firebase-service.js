@@ -12,28 +12,21 @@ class FirebaseService {
   connect(options, authKey) {
     this._assertInstanceAlive();
 
-    let connectPromise;
-    if (this.db) {
-      connectPromise = Promise.resolve()
-        .then(() => {
-          if (this.db) {
-            return this.db.goOnline();
-          }
-        });
-    } else {
-      connectPromise = Promise.resolve()
+    return Promise.resolve().then(() => {
+      if (this.db) {
+        return this.db.goOnline();
+      }
+
+      return Promise.resolve()
         .then(() => firebase.initializeApp(options, this.name))
-        .then(app => app
-          .auth()
-          .signInWithCustomToken(authKey)
+        .then(app => app.auth().signInWithCustomToken(authKey)
           .then(() => {
             if (this.terminated) {
               return app.delete();
             }
             this.db = app.database();
           }));
-    }
-    return connectPromise;
+    });
   }
 
   disconnect() {

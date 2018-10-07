@@ -288,10 +288,10 @@ describe('NEW (experimental) firebase service', () => {
     await connectPromise;
 
     expect(firebase.database).to.have.been.calledOnce;
-    expect(firebase.delete).to.have.been.calledOnce;
+    expect(firebase.spies.databaseSpy.goOnline).not.to.have.been.called;
   });
 
-  it('should not complete 2nd connection after termination, even if was already connected beforehand and terminated WHILE inside db.goOnline()', async () => {
+  it('should not complete 2nd connection after termination, even if was already connected beforehand and terminated WHILE waiting for db.goOnline()', async () => {
     await firebaseService.connect();
 
     firebase.spies.databaseSpy.goOnline.callsFake(() => new Promise(resolve => {
@@ -299,7 +299,6 @@ describe('NEW (experimental) firebase service', () => {
       resolve();
     }));
     await firebaseService.connect();
-
   });
 
   it('shouldnt delete a deleted app upon termination', async () => {
