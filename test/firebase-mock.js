@@ -14,6 +14,7 @@ function firebaseMock({TIMESTAMP_PATH = '/timestamp'} = {}) {
   const serverTimeMock = sinon.stub().callsFake(() => new Date());
 
   const _callbacks = { };
+  const _onDisconnectMethods = [];
   let _serverTime;
   const _data = {};
 
@@ -23,6 +24,14 @@ function firebaseMock({TIMESTAMP_PATH = '/timestamp'} = {}) {
     _data[path] = data;
   };
 
+
+  const createMockOnDisconnect = ref => {
+    return {
+      set(value) {
+        _onDisconnectMethods.push(() => ref.set(value));
+      }
+    };
+  };
 
   const createMockFirebaseRef = (path = '') => ({
     get on() {
@@ -61,6 +70,9 @@ function firebaseMock({TIMESTAMP_PATH = '/timestamp'} = {}) {
       } else {
         setDataAtPath(path, value);
       }
+    },
+    onDisconnect() {
+      return createMockOnDisconnect(this);
     }
   });
 
@@ -108,7 +120,12 @@ function firebaseMock({TIMESTAMP_PATH = '/timestamp'} = {}) {
       databaseSpy,
     },
     setDataAtPath,
-    mockServerTime: time => serverTimeMock.callsFake(() => time)
+    getDataAtPath,
+    mockServerTime: time => serverTimeMock.callsFake(() => time),
+    mockDisconnect: () => {
+      _onDisconnectMethods.forEach(fn => fn());
+      _onDisconnectMethods.length = 0;
+    }
   };
 
   firebaseMock.database.ServerValue = {
