@@ -1,4 +1,5 @@
 const firebaseMock = require('./firebase-mock');
+const {firebaseServiceWithMockFirebase} = require('./firebase-service-mock');
 const {expect, assert} = require('chai');
 const sinon = require('sinon');
 
@@ -9,9 +10,7 @@ describe('firebase service', () => {
 
   beforeEach(() => {
     firebase = firebaseMock();
-    firebaseService = require('proxyquire').noCallThru()('../src/firebase-service', {
-      firebase
-    });
+    firebaseService = firebaseServiceWithMockFirebase(firebase);
   });
 
   it('should be able to connect to firebase', async () => {
