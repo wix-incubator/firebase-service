@@ -22,7 +22,7 @@
     "postrelease": "echo \"##teamcity[buildStatus text='Version: `jq -r '.version' package.json`; {build.status.text}']\""
   },
   "dependencies": {
-    "firebase": "^5.0.0"
+    "firebase": "^4.2.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
