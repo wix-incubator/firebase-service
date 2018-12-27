@@ -5,14 +5,12 @@ const sinon = require('sinon');
 
 let firebaseService,
   firebase;
-let FirebaseServiceCtor;
 
 describe('firebase service', () => {
 
   beforeEach(() => {
     firebase = firebaseMock();
-    FirebaseServiceCtor = firebaseServiceWithMockFirebase(firebase);
-    firebaseService = new FirebaseServiceCtor();
+    firebaseService = firebaseServiceWithMockFirebase(firebase);
   });
 
   it('should be able to connect to firebase', async () => {
@@ -36,8 +34,8 @@ describe('firebase service', () => {
     const path2 = 'path2';
     const event2 = 'event2';
 
-    const service1 = new FirebaseServiceCtor();
-    const service2 = new FirebaseServiceCtor();
+    const service1 = new firebaseService();
+    const service2 = new firebaseService();
 
     await service1
       .connect()

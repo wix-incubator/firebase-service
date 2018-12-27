@@ -1,13 +1,10 @@
-let firebase;
-let uuid;
+const firebase = require('firebase/app');
+require('firebase/database');
+require('firebase/auth');
+const uuid = require('uuid');
 
 class FirebaseService {
-  constructor(name) {
-    uuid = require('uuid');
-    name = name || uuid();
-    firebase = require('firebase/app');
-    require('firebase/database');
-    require('firebase/auth');
+  constructor(name = uuid()) {
     this.name = name;
     this.listeningOnRefs = [];
     this.db = null;
