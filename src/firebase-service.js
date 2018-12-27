@@ -1,7 +1,5 @@
-const firebase = require('firebase/app');
-require('firebase/database');
-require('firebase/auth');
-const uuid = require('uuid');
+let firebase;
+let uuid;
 
 function getPathNameHint(path) {
   const pathNames = (path || '').split('/');
@@ -108,6 +106,10 @@ function setupService() {
 
 class FirebaseService {
   constructor() {
+    firebase = require('firebase/app');
+    require('firebase/database');
+    require('firebase/auth');
+    uuid = require('uuid');
     const service = setupService();
     Object.assign(this, service);
   }
