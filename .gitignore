@@ -64,3 +64,4 @@ target
 maven
 package-lock.json
 .idea/
+firebase-service.iml
