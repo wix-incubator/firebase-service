@@ -1,11 +1,12 @@
 const proxyquire = require('proxyquire');
 
 function firebaseServiceWithMockFirebase(firebaseMock) {
-  return proxyquire.noCallThru()('../src/firebase-service', {
+  const FirebaseService = proxyquire.noCallThru()('../src/firebase-service', {
     'firebase/app': firebaseMock,
     'firebase/auth': {},
-    'firebase/database': {}
+    'firebase/database': {},
   });
+  return new FirebaseService();
 }
 
 module.exports = {
