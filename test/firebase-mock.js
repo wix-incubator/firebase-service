@@ -97,6 +97,7 @@ function firebaseMock({TIMESTAMP_PATH = '/timestamp'} = {}) {
     auth: sinon.stub().callsFake(function () {
       return this;
     }),
+    setPersistence: sinon.stub().resolves(),
     signInWithCustomToken: sinon.stub().callsFake(() => Promise.resolve()),
     database: sinon.stub().callsFake(() => ({
       ref: path => createMockFirebaseRef(path),
@@ -133,6 +134,9 @@ function firebaseMock({TIMESTAMP_PATH = '/timestamp'} = {}) {
       return serverTimeMock();
     }
   };
+
+  firebaseMock.auth.Auth = {Persistence: {SESSION: ''}};
+
   return firebaseMock;
 }
 
