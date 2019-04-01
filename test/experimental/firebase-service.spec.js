@@ -42,7 +42,7 @@ describe('NEW (experimental) firebase service', () => {
     expect(firebase.signInWithCustomToken).to.have.been.calledWith(authKey);
   });
 
-  it('should not re-initialize firebase if firebase app was already initialized and experiment is on ', async () => {
+  it('should not re-initialize firebase if firebase app was already initialized', async () => {
     firebaseService = new FirebaseService('firebase-service-uut');
 
     const options = {
