@@ -16,10 +16,8 @@
     "build": ":",
     "test": "yoshi test --mocha",
     "watch": "export WIX_NODE_BUILD_WATCH_MODE=true; npm run test",
-    "prerelease": "rm -fr dist && node_modules/.bin/babel . --ignore=node_modules --presets=es2015,stage-0 --out-dir dist",
     "release": "yoshi release",
-    "prepush": "yoshi lint",
-    "postrelease": "echo \"##teamcity[buildStatus text='Version: `jq -r '.version' package.json`; {build.status.text}']\""
+    "prepush": "yoshi lint"
   },
   "dependencies": {
     "firebase": "^5.7.3"
