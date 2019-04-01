@@ -12,15 +12,16 @@ class FirebaseService {
     this.listeningOnRefs = [];
     this.db = null;
     this.terminated = false;
-    this._pendingInitialization = Promise.resolve();
+    this._initializationInProgress = Promise.resolve();
   }
 
-  connect(options, authKey) {
+  async connect(options, authKey) {
     this._assertInstanceAlive();
 
-    return Promise.resolve().then(async () => {
-      await this._pendingInitialization;
-      this._pendingInitialization = new Promise(resolve => this._resolve = resolve);
+    await this._initializationInProgress;
+    this._initializationInProgress = new Promise(resolve => this._initializationCompleted = resolve);
+
+    return Promise.resolve().then(() => {
       if (this.db) {
         return this.db.goOnline();
       }
@@ -29,18 +30,17 @@ class FirebaseService {
         .then(() => firebase.initializeApp(options, this.name))
         .then(app => app.auth().signInWithCustomToken(authKey)
           .then(() => {
-            this._resolve();
+            this._initializationCompleted();
             if (this.terminated) {
               return app.delete();
             }
             this.db = app.database();
-          }))
-        .catch(error => {
-          this._resolve();
-          throw error;
-        });
-
-    });
+          }));
+    })
+      .catch(error => {
+        this._initializationCompleted();
+        throw error;
+      });
   }
 
   disconnect() {
