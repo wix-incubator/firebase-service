@@ -12,12 +12,18 @@ class FirebaseService {
     this.listeningOnRefs = [];
     this.db = null;
     this.terminated = false;
+    this._initializing = false;
   }
 
   connect(options, authKey) {
     this._assertInstanceAlive();
 
-    return Promise.resolve().then(() => {
+    return Promise.resolve().then(async () => {
+      if (this._initializing) {
+        await this._waitForInitialized();
+      } else {
+        this._initializing = true;
+      }
       if (this.db) {
         return this.db.goOnline();
       }
@@ -26,11 +32,17 @@ class FirebaseService {
         .then(() => firebase.initializeApp(options, this.name))
         .then(app => app.auth().signInWithCustomToken(authKey)
           .then(() => {
+            this._initializing = false;
             if (this.terminated) {
               return app.delete();
             }
             this.db = app.database();
-          }));
+          }))
+        .catch(error => {
+          this._initializing = false;
+          throw error;
+        });
+
     });
   }
 
@@ -130,6 +142,17 @@ class FirebaseService {
   _assertInstanceAlive() {
     if (this.terminated) {
       throw new Error(`Can't connect a firebase service after termination, please use a different instance (name=${this.name})`);
+    }
+  }
+
+  async _waitForInitialized(retry = 0) {
+    const NUM_OF_RETRIES = 20;
+    const WAIT_BETWEEN_RETRIES = 20;
+    if (this._initializing) {
+      await new Promise(resolve => setTimeout(resolve, WAIT_BETWEEN_RETRIES));
+      if (this._initializing && retry < NUM_OF_RETRIES) {
+        await this.waitForInitialized(++retry);
+      }
     }
   }
 }

@@ -42,6 +42,22 @@ describe('NEW (experimental) firebase service', () => {
     expect(firebase.signInWithCustomToken).to.have.been.calledWith(authKey);
   });
 
+  it('should not re-initialize firebase if firebase app was already initialized and experiment is on ', async () => {
+    firebaseService = new FirebaseService('firebase-service-uut');
+
+    const options = {
+      prop: 'val'
+    };
+    const authKey = 'authKey';
+
+    await firebaseService.connect(options, authKey);
+    expect(firebase.initializeApp).to.have.been.calledWith(options);
+
+    firebase.initializeApp.reset();
+    await firebaseService.connect(options, authKey);
+    expect(firebase.initializeApp).not.to.have.been.called;
+  });
+
   it('should allow multiple consumers simultaneously', async () => {
     const callback1 = sinon.spy();
     const callback2 = sinon.spy();
@@ -103,6 +119,7 @@ describe('NEW (experimental) firebase service', () => {
     });
   });
 
+
   it('should not initialize app more than once (should go-online, instead)', done => {
     firebaseService.connect()
       .then(() => {
@@ -117,6 +134,21 @@ describe('NEW (experimental) firebase service', () => {
       .catch(err => {
         done(err);
       });
+  });
+
+  it('should not initialize app more than once (should go-online, instead)', async () => {
+    firebaseService.connect();
+    await firebaseService.connect();
+    expect(firebase.initializeApp).to.have.been.calledOnce;
+  });
+
+  it('should not stay in initializing mode if the app wasn\'t initialized', async () => {
+    const expectedError = new Error('init fail mock');
+    firebase.initializeApp = sinon.stub().returns(Promise.reject(expectedError));
+
+    await callAndCatch(() => firebaseService.connect());
+
+    expect(firebaseService._initializing).to.equal(false);
   });
 
   it('should support listening on a ref', async () => {
