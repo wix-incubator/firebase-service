@@ -135,13 +135,20 @@ describe('NEW (experimental) firebase service', () => {
       });
   });
 
-  it('should not stay in initializing mode if the app wasn\'t initialized', async () => {
+  it('should re-initialize firebase if firebase failed to initialize the previous time', async () => {
+    firebaseService = new FirebaseService('firebase-service-uut');
+
     const expectedError = new Error('init fail mock');
     firebase.initializeApp = sinon.stub().returns(Promise.reject(expectedError));
 
     await callAndCatch(() => firebaseService.connect());
+    expect(firebase.initializeApp).to.have.been.called;
 
-    expect(firebaseService._initializing).to.equal(false);
+    firebase.initializeApp.reset();
+
+    await callAndCatch(() => firebaseService.connect());
+    expect(firebase.initializeApp).to.have.been.called;
+
   });
 
   it('should support listening on a ref', async () => {
