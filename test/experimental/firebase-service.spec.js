@@ -119,7 +119,6 @@ describe('NEW (experimental) firebase service', () => {
     });
   });
 
-
   it('should not initialize app more than once (should go-online, instead)', done => {
     firebaseService.connect()
       .then(() => {
@@ -134,12 +133,6 @@ describe('NEW (experimental) firebase service', () => {
       .catch(err => {
         done(err);
       });
-  });
-
-  it('should not initialize app more than once (should go-online, instead)', async () => {
-    firebaseService.connect();
-    await firebaseService.connect();
-    expect(firebase.initializeApp).to.have.been.calledOnce;
   });
 
   it('should not stay in initializing mode if the app wasn\'t initialized', async () => {
