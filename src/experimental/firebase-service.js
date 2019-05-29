@@ -23,6 +23,7 @@ class FirebaseService {
 
     return Promise.resolve().then(() => {
       if (this.db) {
+        this._initializationCompleted();
         return this.db.goOnline();
       }
 

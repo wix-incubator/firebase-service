@@ -58,6 +58,22 @@ describe('NEW (experimental) firebase service', () => {
     expect(firebase.initializeApp).not.to.have.been.called;
   });
 
+  it('should allow to re-connect for the second time', async () => {
+    firebaseService = new FirebaseService();
+
+    const options = {
+      prop: 'val'
+    };
+    const authKey = 'authKey';
+
+    await firebaseService.connect(options, authKey);
+    firebaseService.disconnect();
+    await firebaseService.connect(options, authKey);
+    expect(firebase.spies.databaseSpy.goOnline).to.have.been.calledOnce;
+    await firebaseService.connect(options, authKey);
+    expect(firebase.spies.databaseSpy.goOnline).to.have.been.calledTwice;
+  });
+
   it('should allow multiple consumers simultaneously', async () => {
     const callback1 = sinon.spy();
     const callback2 = sinon.spy();
