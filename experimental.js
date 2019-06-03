@@ -1,1 +1,2 @@
-module.exports = require('./dist/src/experimental/firebase-service');
+import firebaseService from './dist/src/experimental/firebase-service';
+export default firebaseService;
