@@ -117,4 +117,4 @@ class FirebaseService {
 
 Object.assign(FirebaseService, setupService());
 
-export default FirebaseService;
+module.exports = FirebaseService;

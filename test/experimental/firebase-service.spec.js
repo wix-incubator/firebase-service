@@ -26,7 +26,7 @@ describe('NEW (experimental) firebase service', () => {
       'firebase/auth': {},
       'firebase/database': {}
     };
-    FirebaseService = require('proxyquire').noCallThru()('../../src/experimental/firebase-service', mocks).default;
+    FirebaseService = require('proxyquire').noCallThru()('../../src/experimental/firebase-service', mocks);
     firebaseService = new FirebaseService('firebase-service-uut');
   });
 
