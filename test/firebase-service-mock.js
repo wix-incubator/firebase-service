@@ -5,7 +5,7 @@ function firebaseServiceWithMockFirebase(firebaseMock) {
     'firebase/app': firebaseMock,
     'firebase/auth': {},
     'firebase/database': {},
-  });
+  }).default;
   return new FirebaseService();
 }
 
