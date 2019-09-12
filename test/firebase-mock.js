@@ -16,7 +16,7 @@ function firebaseMock({TIMESTAMP_PATH = '/timestamp'} = {}) {
   const _callbacks = { };
   const _onDisconnectMethods = [];
   let _serverTime;
-  const _data = {};
+  const _data = {'/.info/serverTimeOffset': 12345678};
 
   const getDataAtPath = path => _data[path];
 
@@ -119,10 +119,14 @@ function firebaseMock({TIMESTAMP_PATH = '/timestamp'} = {}) {
       firebaseRefOffSpy,
       firebaseRefOnSpy,
       databaseSpy,
+      serverTimeSpy: serverTimeMock,
     },
     setDataAtPath,
     getDataAtPath,
-    mockServerTime: time => serverTimeMock.callsFake(() => time),
+    mockServerTime: time => {
+      _data['/.info/serverTimeOffset'] = time - Date.now();
+      serverTimeMock.callsFake(() => time);
+    },
     mockDisconnect: () => {
       _onDisconnectMethods.forEach(fn => fn());
       _onDisconnectMethods.length = 0;

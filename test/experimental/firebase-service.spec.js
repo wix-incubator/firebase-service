@@ -17,9 +17,11 @@ const callAndCatch = async fn => {
 };
 
 describe('NEW (experimental) firebase service', () => {
+  let sandbox;
 
   beforeEach(() => {
     firebase = firebaseMock();
+    sandbox = sinon.sandbox.create();
 
     const mocks = {
       'firebase/app': firebase,
@@ -28,6 +30,10 @@ describe('NEW (experimental) firebase service', () => {
     };
     FirebaseService = require('proxyquire').noCallThru()('../../src/experimental/firebase-service', mocks);
     firebaseService = new FirebaseService('firebase-service-uut');
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   it('should be able to connect to firebase', async () => {
@@ -359,22 +365,40 @@ describe('NEW (experimental) firebase service', () => {
     expect(firebase.delete).to.have.been.calledOnce;
   });
 
-  it('should support getting server time', async () => {
-    const now = new Date();
-    await firebaseService.connect();
-    firebase.mockServerTime(now);
-    const serverTime = await firebaseService.getFirebaseServerTime('/timestamp'); //TODO the firebaseMock shouldn't hardcode the timestamp path
-    expect(serverTime).to.equal(now);
-  });
+  describe('Server Time', () => {
+    const now = Date.now();
+    const serverTime = now - (1000 * 60 * 3);
 
-  it('should throw an error for getting the server time if havent previously connected', async () => {
-    const now = new Date();
-    firebase.mockServerTime(now);
+    beforeEach(() => {
+      sandbox.stub(Date, 'now').returns(now);
+    });
 
-    await firebaseService.disconnect();
+    it('should support getting server time the set&get way by default', async () => {
+      await firebaseService.connect();
+      firebase.mockServerTime(serverTime);
+      const actual = await firebaseService.getFirebaseServerTime('/timestamp'); //TODO the firebaseMock shouldn't hardcode the timestamp path
+      expect(actual).to.equal(serverTime);
+      expect(firebase.spies.serverTimeSpy).to.have.been.calledOnce;
+    });
 
-    const errFn = () => firebaseService.getFirebaseServerTime('/path/timestamp-mock');
-    expect(errFn).to.throw('FirebaseService.getFirebaseServerTime: not connected! (path=timestamp-mock)');
+    it('should support getting server time atomically via a flag', async () => {
+      firebaseService = new FirebaseService(undefined, {atomicServerTime: true});
+      await firebaseService.connect();
+      firebase.mockServerTime(serverTime);
+      const actual = await firebaseService.getFirebaseServerTime('/timestamp'); //TODO the firebaseMock shouldn't hardcode the timestamp path
+      expect(actual).to.equal(serverTime);
+      expect(firebase.spies.serverTimeSpy).to.not.have.been.called;
+    });
+
+    it('should throw an error for getting the server time if havent previously connected', async () => {
+      const now = new Date();
+      firebase.mockServerTime(now);
+
+      await firebaseService.disconnect();
+
+      const errFn = () => firebaseService.getFirebaseServerTime('/path/timestamp-mock');
+      expect(errFn).to.throw('FirebaseService.getFirebaseServerTime: not connected! (path=timestamp-mock)');
+    });
   });
 
   it('should get values at a path', async () => {

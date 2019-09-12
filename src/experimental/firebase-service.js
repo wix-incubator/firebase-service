@@ -2,7 +2,9 @@ let firebase;
 let uuid;
 
 class FirebaseService {
-  constructor(name) {
+  atomicServerTime = false;
+
+  constructor(name, {atomicServerTime = false} = {}) {
     uuid = require('uuid');
     name = name || uuid();
     firebase = require('firebase/app');
@@ -13,6 +15,7 @@ class FirebaseService {
     this.db = null;
     this.terminated = false;
     this._initializationInProgress = Promise.resolve();
+    this.atomicServerTime = atomicServerTime;
   }
 
   async connect(options, authKey) {
@@ -68,6 +71,12 @@ class FirebaseService {
   getFirebaseServerTime(serverTimePath) {
     if (!this.db) {
       throw new Error(`FirebaseService.getFirebaseServerTime: not connected! (path=${getPathNameHint(serverTimePath)})`);
+    }
+
+    if (this.atomicServerTime) {
+      return this.db.ref('/.info/serverTimeOffset')
+        .once('value')
+        .then(data => data.val() + Date.now());
     }
 
     const ref = this.db.ref(serverTimePath);
