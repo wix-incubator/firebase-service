@@ -385,7 +385,7 @@ describe('NEW (experimental) firebase service', () => {
       firebaseService = new FirebaseService(undefined, {atomicServerTime: true});
       await firebaseService.connect();
       firebase.mockServerTime(serverTime);
-      const actual = await firebaseService.getFirebaseServerTime('/timestamp'); //TODO the firebaseMock shouldn't hardcode the timestamp path
+      const actual = await firebaseService.getFirebaseServerTime();
       expect(actual).to.equal(serverTime);
       expect(firebase.spies.serverTimeSpy).to.not.have.been.called;
     });
