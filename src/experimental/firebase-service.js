@@ -5,7 +5,7 @@ class FirebaseService {
   atomicServerTime = false;
 
   constructor(name, {atomicServerTime = false} = {}) {
-    uuid = require('uuid/4');
+    uuid = require('uuid/v4');
     name = name || uuid();
     firebase = require('firebase/app');
     require('firebase/database');
