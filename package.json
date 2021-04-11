@@ -23,19 +23,23 @@
     "firebase": "^8.0.0",
     "uuid": "^3.0.1"
   },
+  "eslintConfig": {
+    "extends": "@wix/eslint-config-yoshi",
+    "root": true
+  },
   "devDependencies": {
+    "@wix/yoshi": "^4.324.0",
+    "@wix/eslint-config-yoshi": "latest",
     "babel-cli": "^6.26.0",
     "babel-polyfill": "^6.23.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "chai": "^3.5.0",
-    "eslint-config-wix": "^1.1.19",
     "husky": "^0.13.4",
     "proxyquire": "^1.8.0",
+    "react-native-extended-cli": "^1.0.209",
     "sinon": "^2.4.1",
-    "sinon-chai": "^2.12.0",
-    "yoshi": "latest",
-    "react-native-extended-cli": "^1.0.209"
+    "sinon-chai": "^2.12.0"
   },
   "publishConfig": {
     "registry": "http://registry.npmjs.org"

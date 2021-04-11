@@ -4,7 +4,7 @@ let uuid;
 class FirebaseService {
   atomicServerTime = false;
 
-  constructor(name, {atomicServerTime = false} = {}) {
+  constructor(name, { atomicServerTime = false } = {}) {
     uuid = require('uuid/v4');
     name = name || uuid();
     firebase = require('firebase/app');
@@ -22,26 +22,33 @@ class FirebaseService {
     this._assertInstanceAlive();
 
     await this._initializationInProgress;
-    this._initializationInProgress = new Promise(resolve => this._initializationCompleted = resolve);
+    this._initializationInProgress = new Promise(
+      (resolve) => (this._initializationCompleted = resolve),
+    );
 
-    return Promise.resolve().then(() => {
-      if (this.db) {
-        this._initializationCompleted();
-        return this.db.goOnline();
-      }
+    return Promise.resolve()
+      .then(() => {
+        if (this.db) {
+          this._initializationCompleted();
+          return this.db.goOnline();
+        }
 
-      return Promise.resolve()
-        .then(() => firebase.initializeApp(options, this.name))
-        .then(app => app.auth().signInWithCustomToken(authKey)
-          .then(() => {
-            this._initializationCompleted();
-            if (this.terminated) {
-              return app.delete();
-            }
-            this.db = app.database();
-          }));
-    })
-      .catch(error => {
+        return Promise.resolve()
+          .then(() => firebase.initializeApp(options, this.name))
+          .then((app) =>
+            app
+              .auth()
+              .signInWithCustomToken(authKey)
+              .then(() => {
+                this._initializationCompleted();
+                if (this.terminated) {
+                  return app.delete();
+                }
+                this.db = app.database();
+              }),
+          );
+      })
+      .catch((error) => {
         this._initializationCompleted();
         throw error;
       });
@@ -49,7 +56,7 @@ class FirebaseService {
 
   disconnect() {
     if (this.db) {
-      this.listeningOnRefs.forEach(r => r.off());
+      this.listeningOnRefs.forEach((r) => r.off());
       this.listeningOnRefs.length = 0;
       this.db.goOffline();
     }
@@ -70,33 +77,39 @@ class FirebaseService {
 
   getFirebaseServerTime(serverTimePath) {
     if (!this.db) {
-      throw new Error(`FirebaseService.getFirebaseServerTime: not connected! (path=${getPathNameHint(serverTimePath)})`);
+      throw new Error(
+        `FirebaseService.getFirebaseServerTime: not connected! (path=${getPathNameHint(
+          serverTimePath,
+        )})`,
+      );
     }
 
     if (this.atomicServerTime) {
-      return this.db.ref('/.info/serverTimeOffset')
+      return this.db
+        .ref('/.info/serverTimeOffset')
         .once('value')
-        .then(data => data.val() + Date.now());
+        .then((data) => data.val() + Date.now());
     }
 
     const ref = this.db.ref(serverTimePath);
     return ref
       .set(firebase.database.ServerValue.TIMESTAMP)
-      .then(() => ref
-        .once('value')
-        .then(snapshot => snapshot.val())
-      );
+      .then(() => ref.once('value').then((snapshot) => snapshot.val()));
   }
 
-  getValuesAtPath({path}) {
+  getValuesAtPath({ path }) {
     if (!this.db) {
-      throw new Error(`FirebaseService.getValuesAsPath: not connected! (path=${getPathNameHint(path)})`);
+      throw new Error(
+        `FirebaseService.getValuesAsPath: not connected! (path=${getPathNameHint(
+          path,
+        )})`,
+      );
     }
 
     return this.db
       .ref(path)
       .once('value')
-      .then(snapshot => snapshot.val());
+      .then((snapshot) => snapshot.val());
   }
 
   listenOnRef(ref, options) {
@@ -105,14 +118,18 @@ class FirebaseService {
 
   listenOnPath(path, options) {
     if (!this.db) {
-      throw new Error(`FirebaseService.listenOnPath: not connected! (path=${getPathNameHint(path)})`);
+      throw new Error(
+        `FirebaseService.listenOnPath: not connected! (path=${getPathNameHint(
+          path,
+        )})`,
+      );
     }
 
     const ref = this.db.ref(path);
     return this._listenOnRefWithQuery(ref, options);
   }
 
-  _listenOnRefWithQuery(ref, {orderBy, startAt} = {}) {
+  _listenOnRefWithQuery(ref, { orderBy, startAt } = {}) {
     if (orderBy) {
       ref = ref.orderByChild(orderBy);
     }
@@ -122,15 +139,15 @@ class FirebaseService {
     }
 
     return {
-      when: event => ({
-        call: callback => {
-          ref.on(event, snapshot => {
+      when: (event) => ({
+        call: (callback) => {
+          ref.on(event, (snapshot) => {
             try {
               const returnValue = callback({
-                //these are the fields available in the callback from a listener
+                // these are the fields available in the callback from a listener
                 key: snapshot.key,
                 value: snapshot.val(),
-                ref: snapshot.ref //a ref that can be used in listenOnRef
+                ref: snapshot.ref, // a ref that can be used in listenOnRef
               });
               if (returnValue && typeof returnValue.catch === 'function') {
                 returnValue.catch(console.error);
@@ -141,14 +158,16 @@ class FirebaseService {
           });
 
           this.listeningOnRefs.push(ref);
-        }
-      })
+        },
+      }),
     };
   }
 
   _assertInstanceAlive() {
     if (this.terminated) {
-      throw new Error(`Can't connect a firebase service after termination, please use a different instance (name=${this.name})`);
+      throw new Error(
+        `Can't connect a firebase service after termination, please use a different instance (name=${this.name})`,
+      );
     }
   }
 }

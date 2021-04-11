@@ -10,5 +10,5 @@ function firebaseServiceWithMockFirebase(firebaseMock) {
 }
 
 module.exports = {
-  firebaseServiceWithMockFirebase
+  firebaseServiceWithMockFirebase,
 };
