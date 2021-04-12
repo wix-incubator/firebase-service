@@ -1,1 +1,1 @@
-module.exports = require('./dist/src/experimental/firebase-service.js');
+module.exports = require('./src/experimental/firebase-service.js');
