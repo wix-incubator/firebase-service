@@ -1,4 +1,5 @@
-let firebase;
+import firebase from 'firebase/app';
+
 let uuid;
 
 class FirebaseService {
@@ -7,7 +8,6 @@ class FirebaseService {
   constructor(name, { atomicServerTime = false } = {}) {
     uuid = require('uuid/v4');
     name = name || uuid();
-    firebase = require('firebase/app');
     require('firebase/database');
     require('firebase/auth');
     this.name = name;
