@@ -1,6 +1,10 @@
-import firebase from 'firebase/app';
-
+let firebase;
 let uuid;
+
+const getFirebaseAppInstance = () => {
+  const fbApp = require('firebase/app');
+  return fbApp.default ? fbApp.default : fbApp;
+}
 
 class FirebaseService {
   atomicServerTime = false;
@@ -8,6 +12,7 @@ class FirebaseService {
   constructor(name, { atomicServerTime = false } = {}) {
     uuid = require('uuid/v4');
     name = name || uuid();
+    firebase = getFirebaseAppInstance();
     require('firebase/database');
     require('firebase/auth');
     this.name = name;
