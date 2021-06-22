@@ -1,3 +1,4 @@
 wallaby.js
 dist/es/
 dist/test/
+test/
