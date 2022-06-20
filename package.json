@@ -42,6 +42,7 @@
     "sinon": "^2.4.1"
   },
   "publishConfig": {
-    "registry": "http://registry.npmjs.org"
+    "registry": "http://npm.dev.wixpress.com",
+    "versionBumpStrategy": "patch"
   }
 }
