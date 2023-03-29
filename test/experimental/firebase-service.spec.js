@@ -24,8 +24,8 @@ describe('NEW (experimental) firebase service', () => {
     sandbox = sinon.sandbox.create();
 
     const mocks = {
-      'firebase/app': firebase,
-      'firebase/auth': {},
+      'firebase/compat/app': firebase,
+      'firebase/compat/auth': {},
       'firebase/database': {},
     };
     FirebaseService = require('proxyquire').noCallThru()(
