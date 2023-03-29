@@ -2,9 +2,9 @@ let firebase;
 let uuid;
 
 const getFirebaseAppInstance = () => {
-  const fbApp = require('firebase/app');
+  const fbApp = require('firebase/compat/app');
   return fbApp.default ? fbApp.default : fbApp;
-}
+};
 
 class FirebaseService {
   atomicServerTime = false;
@@ -14,7 +14,7 @@ class FirebaseService {
     name = name || uuid();
     firebase = getFirebaseAppInstance();
     require('firebase/database');
-    require('firebase/auth');
+    require('firebase/compat/auth');
     this.name = name;
     this.listeningOnRefs = [];
     this.db = null;

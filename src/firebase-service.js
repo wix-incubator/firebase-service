@@ -116,9 +116,9 @@ function setupService() {
 
 class FirebaseService {
   constructor() {
-    firebase = require('firebase/app');
+    firebase = require('firebase/compat/app');
     require('firebase/database');
-    require('firebase/auth');
+    require('firebase/compat/auth');
     uuid = require('uuid');
     const service = setupService();
     Object.assign(this, service);
