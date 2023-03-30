@@ -12,9 +12,9 @@ class FirebaseService {
   constructor(name, { atomicServerTime = false } = {}) {
     uuid = require('uuid/v4');
     name = name || uuid();
-    firebase = getFirebaseAppInstance();
-    require('firebase/database');
+    require('firebase/compat/database');
     require('firebase/compat/auth');
+    firebase = getFirebaseAppInstance();
     this.name = name;
     this.listeningOnRefs = [];
     this.db = null;
